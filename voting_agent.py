@@ -1,0 +1,574 @@
+from anthropic import Anthropic
+import json
+import re
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class VotingAgent:
+    def __init__(self):
+        self.client = Anthropic()
+        self.preferences = {}
+        self.location = ""
+        self.candidates = []
+        self.analysis = ""
+        self.model = "claude-sonnet-4-6"
+    
+    def learn_preferences(self):
+        """Learn voter's top 3 political priorities"""
+        print("\n🗳️  Welcome to the Voting Assistant Agent")
+        print("=" * 50)
+        print("\nI'll help you find the candidates that align with YOUR values.")
+        print("\nFirst, tell me about your political priorities.\n")
+        
+        for i in range(3):
+            issue = input(f"Priority {i+1} - What's an important issue for you? (e.g., climate change): ").strip()
+            position = input(f"What's your position on {issue}? (e.g., need immediate action): ").strip()
+            
+            self.preferences[issue] = position
+            print(f"✓ Recorded: {issue}\n")
+        
+        print(f"\n✓ Your priorities: {', '.join(self.preferences.keys())}")
+    
+    def get_location(self):
+        """Get voter's location"""
+        self.location = input("\nWhat's your location? (e.g., San Diego County, CA): ").strip()
+        print(f"✓ Location: {self.location}")
+    
+    def search_candidates(self, race_type="governor"):
+        """Load candidates from JSON file"""
+        try:
+            with open('candidates.json', 'r') as f:
+                data = json.load(f)
+                self.candidates = data.get('candidates', [])
+                print(f"\n✓ Loaded {len(self.candidates)} candidates")
+        except FileNotFoundError:
+            print("\n⚠️  candidates.json not found. Using sample data.")
+            self.candidates = [
+                {
+                    "name": "Steve Hilton",
+                    "party": "Republican",
+                    "positions": {"climate": "Market-based solutions", "healthcare": "Private market", "education": "School choice"}
+                },
+                {
+                    "name": "Xavier Becerra",
+                    "party": "Democrat",
+                    "positions": {"climate": "Aggressive climate action", "healthcare": "Expand public option", "education": "Increase funding"}
+                },
+                {
+                    "name": "Tom Steyer",
+                    "party": "Democrat",
+                    "positions": {"climate": "Immediate aggressive action", "healthcare": "Medicare for all", "education": "Major public investment"}
+                },
+                {
+                    "name": "Chad Bianco",
+                    "party": "Republican",
+                    "positions": {"climate": "Balanced approach", "healthcare": "Competition", "education": "Local control"}
+                },
+                {
+                    "name": "Katie Porter",
+                    "party": "Democrat",
+                    "positions": {"climate": "Climate emergency", "healthcare": "Medicare for all", "education": "Public education funding"}
+                }
+            ]
+    
+    def score_alignment(self):
+        """Use Claude to score candidate alignment with voter priorities"""
+        print("\n🤖 Analyzing candidate alignment with your priorities...")
+        print("(This may take 15-30 seconds)\n")
+        
+        preferences_text = "\n".join([f"- {issue}: {position}" for issue, position in self.preferences.items()])
+        
+        candidates_text = "\n".join([
+            f"- {c['name']} ({c['party']}): {json.dumps(c.get('positions', {}))}"
+            for c in self.candidates
+        ])
+        
+        prompt = f"""I'm a voter with these priorities:
+{preferences_text}
+
+Here are the candidates for California Governor 2026:
+{candidates_text}
+
+Please analyze how well each candidate aligns with my priorities.
+
+For each candidate, provide:
+1. Alignment score (0-100)
+2. Why they align (or don't align) with my priorities
+3. Specific position matches or conflicts
+4. Your recommendation
+
+Format your response clearly with each candidate's analysis."""
+        
+        messages = [{"role": "user", "content": prompt}]
+        
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=2500,
+            messages=messages
+        )
+        
+        self.analysis = response.content[0].text
+        print("✓ Analysis complete")
+    
+    def generate_report(self):
+        """Generate text voting guide"""
+        filename = f"voting_guide_{self.location.replace(' ', '_').replace(',', '')}.txt"
+        
+        report = f"""
+{'='*70}
+VOTING GUIDE FOR {self.location.upper()}
+2026 California Governor Election
+{'='*70}
+
+YOUR POLITICAL PRIORITIES:
+{'-'*70}
+"""
+        for issue, position in self.preferences.items():
+            report += f"\n{issue.title()}: {position}"
+        
+        report += f"""
+
+{'='*70}
+
+CANDIDATE ANALYSIS:
+{'-'*70}
+
+{self.analysis}
+
+{'='*70}
+Generated by Voting Assistant Agent
+{'='*70}
+"""
+        
+        with open(filename, 'w') as f:
+            f.write(report)
+        
+        print(f"\n✓ Text report saved: {filename}")
+        return filename
+    
+    def generate_html_report(self):
+        """Generate HTML voting guide"""
+        # Build priorities grid
+        priorities_html = ""
+        for issue, position in self.preferences.items():
+            priorities_html += f"""
+            <div class="priority-card">
+                <h4>{issue.title()}</h4>
+                <p>{position}</p>
+            </div>
+            """
+        
+        # Extract scores from Claude's analysis
+        candidate_scores = {}
+        for candidate in self.candidates:
+            candidate_name = candidate['name']
+            # Look for "Alignment Score: X/100" pattern in the analysis
+            pattern = rf"{re.escape(candidate_name)}.*?Alignment Score:\s*(\d+)/100"
+            match = re.search(pattern, self.analysis, re.IGNORECASE | re.DOTALL)
+            if match:
+                score = int(match.group(1))
+            else:
+                score = 50  # Default if not found
+            candidate_scores[candidate_name] = score
+        
+        # Build candidates table with actual scores
+        candidates_html = ""
+        for candidate in self.candidates:
+            score = candidate_scores.get(candidate['name'], 50)
+            
+            color = "#10B981" if score >= 85 else "#3B82F6" if score >= 70 else "#F59E0B" if score >= 50 else "#EF4444"
+            
+            candidates_html += f"""
+            <tr>
+                <td><span class="candidate-name">{candidate['name']}</span><br><span class="candidate-party">{candidate['party']}</span></td>
+                <td>{candidate['party']}</td>
+                <td class="score-cell">
+                    <div class="score-bar" style="width: {score}%; background: {color};"></div>
+                    <span class="score-text">{score}%</span>
+                </td>
+                <td><span class="badge">View Analysis</span></td>
+            </tr>
+            """
+        
+        # Process analysis
+        result = []
+        for line in self.analysis.split('\n'):
+            if line.strip():
+                result.append(line)
+        
+        analysis_html = '\n'.join(result)
+        
+        # Convert markdown tables to HTML tables
+        lines = analysis_html.split('\n')
+        i = 0
+        new_lines = []
+        while i < len(lines):
+            line = lines[i]
+            if '|' in line and not line.strip().startswith('-'):
+                # Start of a table
+                table_lines = [line]
+                i += 1
+                # Skip separator line
+                if i < len(lines) and all(c in '|-' for c in lines[i].replace(' ', '')):
+                    i += 1
+                # Collect table rows
+                while i < len(lines) and '|' in lines[i]:
+                    table_lines.append(lines[i])
+                    i += 1
+                # Convert table to HTML
+                html_table = '<table style="width:100%; margin:15px 0; border-collapse:collapse; background:white;">'
+                for j, tline in enumerate(table_lines):
+                    cells = [cell.strip() for cell in tline.split('|')[1:-1]]
+                    if j == 0:
+                        html_table += '<thead><tr>'
+                        for cell in cells:
+                            html_table += f'<th style="border:1px solid #E5E7EB; padding:10px; text-align:left; background:#F3F4F6; font-weight:600;">{cell}</th>'
+                        html_table += '</tr></thead><tbody>'
+                    else:
+                        html_table += '<tr>'
+                        for cell in cells:
+                            html_table += f'<td style="border:1px solid #E5E7EB; padding:10px; text-align:left;">{cell}</td>'
+                        html_table += '</tr>'
+                html_table += '</tbody></table>'
+                new_lines.append(html_table)
+            else:
+                new_lines.append(line)
+                i += 1
+        
+        analysis_html = '\n'.join(new_lines)
+        
+        # Convert markdown formatting
+        analysis_html = re.sub(r'^#### (.*?)$', r'<h4>\1</h4>', analysis_html, flags=re.MULTILINE)
+        analysis_html = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', analysis_html, flags=re.MULTILINE)
+        analysis_html = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', analysis_html, flags=re.MULTILINE)
+        analysis_html = re.sub(r'^# (.*?)$', r'<h1>\1</h1>', analysis_html, flags=re.MULTILINE)
+        analysis_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', analysis_html)
+        analysis_html = re.sub(r'\n\n+', '\n', analysis_html)
+        analysis_html = analysis_html.replace('\n', '<br>')
+        
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 California Voting Guide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+            line-height: 1.6;
+            color: #333;
+        }}
+        
+        .container {{
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }}
+        
+        .header p {{
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin: 5px 0;
+        }}
+        
+        .content {{
+            padding: 40px;
+        }}
+        
+        .section {{
+            margin-bottom: 50px;
+        }}
+        
+        .section h2 {{
+            font-size: 1.8em;
+            color: #1F2937;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }}
+        
+        .how-to-cards {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        
+        .how-to-card {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }}
+        
+        .how-to-card h4 {{
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }}
+        
+        .how-to-card p {{
+            font-size: 0.95em;
+            opacity: 0.95;
+            line-height: 1.5;
+        }}
+        
+        .priorities-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        
+        .priority-card {{
+            background: #F3F4F6;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+        }}
+        
+        .priority-card h4 {{
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }}
+        
+        .priority-card p {{
+            color: #4B5563;
+            line-height: 1.6;
+        }}
+        
+        .candidates-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }}
+        
+        .candidates-table th {{
+            background: #F3F4F6;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #1F2937;
+            border-bottom: 2px solid #E5E7EB;
+        }}
+        
+        .candidates-table td {{
+            padding: 20px 15px;
+            border-bottom: 1px solid #E5E7EB;
+        }}
+        
+        .candidates-table tr:hover {{
+            background: #F9FAFB;
+        }}
+        
+        .candidate-name {{
+            font-weight: 600;
+            color: #1F2937;
+            font-size: 1.05em;
+        }}
+        
+        .candidate-party {{
+            color: #6B7280;
+            font-size: 0.95em;
+        }}
+        
+        .score-cell {{
+            width: 200px;
+        }}
+        
+        .score-bar {{
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }}
+        
+        .score-text {{
+            font-weight: 700;
+            color: #1F2937;
+            margin-left: 10px;
+        }}
+        
+        .badge {{
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            background: #F3F4F6;
+            color: #667eea;
+        }}
+        
+        .analysis-section {{
+            background: #F9FAFB;
+            padding: 30px;
+            border-radius: 8px;
+            line-height: 1.8;
+            color: #374151;
+        }}
+        
+        .analysis-section h2 {{
+            font-size: 1.5em;
+            color: #1F2937;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border: none;
+            padding-bottom: 0;
+        }}
+        
+        .analysis-section h3 {{
+            font-size: 1.2em;
+            color: #1F2937;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }}
+        
+        .analysis-section h4 {{
+            font-size: 1.05em;
+            color: #1F2937;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }}
+        
+        .footer {{
+            background: #F3F4F6;
+            padding: 20px 40px;
+            text-align: center;
+            color: #6B7280;
+            font-size: 0.9em;
+        }}
+        
+        strong {{
+            color: #1F2937;
+            font-weight: 600;
+        }}
+        
+        @media print {{
+            body {{
+                background: white;
+                padding: 0;
+            }}
+            .container {{
+                box-shadow: none;
+                max-width: 100%;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗳️ 2026 Voting Guide</h1>
+            <p>California Governor Election</p>
+            <p>{self.location}</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>How to Use This Guide</h2>
+                <div class="how-to-cards">
+                    <div class="how-to-card">
+                        <h4>1️⃣ Review Rankings</h4>
+                        <p>See how candidates align with your priorities (0-100%)</p>
+                    </div>
+                    <div class="how-to-card">
+                        <h4>2️⃣ Understand Why</h4>
+                        <p>Read detailed analysis showing specific position matches</p>
+                    </div>
+                    <div class="how-to-card">
+                        <h4>3️⃣ Consider Viability</h4>
+                        <p>Balance ideology with electability based on polling</p>
+                    </div>
+                    <div class="how-to-card">
+                        <h4>4️⃣ Make Your Decision</h4>
+                        <p>Vote based on your values and this analysis</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Your Political Priorities</h2>
+                <div class="priorities-grid">
+                    {priorities_html}
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Candidate Rankings at a Glance</h2>
+                <table class="candidates-table">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Party</th>
+                            <th>Alignment Score</th>
+                            <th>Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {candidates_html}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Detailed Candidate Analysis</h2>
+                <div class="analysis-section">
+                    {analysis_html}
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by Voting Assistant Agent | 2026</p>
+        </div>
+    </div>
+</body>
+</html>"""
+        
+        filename = f"voting_guide_{self.location.replace(' ', '_').replace(',', '')}.html"
+        with open(filename, 'w') as f:
+            f.write(html_content)
+        
+        print(f"✓ HTML report saved: {filename}")
+        return filename
+    
+    def run(self):
+        """Run the complete agent workflow"""
+        self.learn_preferences()
+        self.get_location()
+        self.search_candidates()
+        self.score_alignment()
+        self.generate_report()
+        self.generate_html_report()
+        print("\n✓ Done! Check your generated reports.")
+
+if __name__ == "__main__":
+    agent = VotingAgent()
+    agent.run()

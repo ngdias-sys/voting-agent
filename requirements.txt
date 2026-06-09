@@ -1,0 +1,5 @@
+anthropic
+python-dotenv
+google-search-results
+requests
+beautifulsoup4

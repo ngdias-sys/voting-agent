@@ -1,0 +1,67 @@
+{
+  "race": "California Governor 2026",
+  "primary_date": "June 2, 2026",
+  "general_election_date": "November 3, 2026",
+  "candidates": [
+    {
+      "name": "Steve Hilton",
+      "party": "Republican",
+      "primary_votes": "1,170,829",
+      "primary_percentage": "26.9%",
+      "background": "Former Fox News host, tech entrepreneur, and political commentator. Previously served as senior policy advisor in UK government.",
+      "positions": {
+        "climate_change": "Opposes strict climate regulations; advocates for market-based solutions and American energy independence. Skeptical of green mandates that impact energy costs.",
+        "healthcare": "Supports private healthcare solutions and competition. Opposes government-mandated healthcare expansion. Advocates for reducing healthcare costs through market competition.",
+        "education": "Supports school choice, charter schools, and parental control over education. Emphasizes reducing bureaucracy in education system."
+      }
+    },
+    {
+      "name": "Xavier Becerra",
+      "party": "Democratic",
+      "primary_votes": "1,121,401",
+      "primary_percentage": "25.8%",
+      "background": "U.S. Attorney General (Biden administration), former California Attorney General, U.S. Congressman. Career public servant focused on consumer protection and social justice.",
+      "positions": {
+        "climate_change": "Strong advocate for climate action. Supports aggressive emissions reductions, renewable energy investment, and holding corporations accountable for environmental damage.",
+        "healthcare": "Supports expanding healthcare access, protecting Affordable Care Act, and ensuring healthcare is a right not a privilege. Advocates for reducing drug costs.",
+        "education": "Supports increased education funding, teacher salary increases, and expanding college access. Advocates for equitable funding across districts."
+      }
+    },
+    {
+      "name": "Tom Steyer",
+      "party": "Democratic",
+      "primary_votes": "862,541",
+      "primary_percentage": "19.8%",
+      "background": "Billionaire investor, environmental philanthropist, and activist. Founded NextGen America climate advocacy organization. Ran for U.S. President in 2020.",
+      "positions": {
+        "climate_change": "Leading climate advocate. Supports most aggressive climate policies, significant renewable energy investment, and bold action on climate crisis. Made climate central to political agenda.",
+        "healthcare": "Supports Medicare for All or expanded government healthcare. Advocates for universal healthcare and strong drug price regulations.",
+        "education": "Supports substantial education funding increases, teacher pay raises, and making higher education more affordable. Emphasizes equity in education."
+      }
+    },
+    {
+      "name": "Chad Bianco",
+      "party": "Republican",
+      "primary_votes": "486,997",
+      "primary_percentage": "11.2%",
+      "background": "Riverside County Sheriff, law enforcement background. Conservative candidate focused on public safety and crime reduction.",
+      "positions": {
+        "climate_change": "Does not emphasize climate as policy priority. Focuses on other issues like public safety and law enforcement. Pragmatic approach to environmental issues.",
+        "healthcare": "Supports private healthcare market, concerned about government overreach in healthcare. Emphasizes local control and choice.",
+        "education": "Prioritizes school safety, law and order in schools, and parental rights. Conservative approach to education policy."
+      }
+    },
+    {
+      "name": "Katie Porter",
+      "party": "Democratic",
+      "primary_votes": "215,376",
+      "primary_percentage": "4.9%",
+      "background": "U.S. Congresswoman, law professor, consumer advocate. Known for aggressive questioning of corporate executives and financial regulation.",
+      "positions": {
+        "climate_change": "Strong climate advocate. Supports aggressive climate action and renewable energy transition. Focuses on holding corporations accountable.",
+        "healthcare": "Vocal supporter of Medicare for All. Strong consumer advocate for healthcare reform. Opposes corporate control of healthcare.",
+        "education": "Supports robust education funding, teacher salary increases, and student debt relief. Advocates for making education more affordable and accessible."
+      }
+    }
+  ]
+}
