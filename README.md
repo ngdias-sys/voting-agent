@@ -8,6 +8,28 @@ Built as a solution to a personal need during the 2026 California primary electi
 
 ---
 
+## Quick Start
+
+```bash
+# Clone and setup
+git clone https://github.com/ngdias-sys/voting-agent.git
+cd voting-agent
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+python3 -m pip install -r requirements.txt
+
+# Configure API keys
+cp .env.example .env
+# Edit .env and add your ANTHROPIC_API_KEY
+
+# Run the agent
+python3 voting_agent.py
+```
+
+---
+
 ## The Problem
 
 **The Challenge:** Voters spend 6+ hours researching candidates across fragmented sources and still feel uncertain about their choices.
@@ -27,6 +49,20 @@ Built as a solution to a personal need during the 2026 California primary electi
 **Input your political priorities** → **Agent analyzes candidates** → **Get personalized ranking with detailed reasoning**
 
 The agent doesn't replace human judgment. It removes friction and builds confidence in decision-making.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    VOTING AGENT WORKFLOW                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  LEARN                ANALYZE              EXPLAIN           │
+│  ──────               ───────              ───────           │
+│  • 3 issues    →      • Claude scores   →  • Text report    │
+│  • Positions         • 0-100 per issue     • HTML guide     │
+│  • Location          • Reasons             • Visual ranking  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -50,11 +86,13 @@ Explains *why* each candidate aligns with you, not just *what* the score is.
 
 ```
 voting-agent/
-├── voting_agent.py           # Main agent class with all methods
-├── candidates.json           # 2026 CA Governor candidates + positions
-├── requirements.txt          # Python dependencies
-├── .env.example              # API key template
-└── README.md                 # This file
+├── voting_agent.py              # Main agent class with all methods
+├── candidates.json              # 2026 CA Governor candidates + positions
+├── requirements.txt             # Python dependencies
+├── .env.example                 # API key template
+├── sample_output_1.html         # Example: SF voter (polarized)
+├── sample_output_2.html         # Example: SD voter (moderate)
+└── README.md                    # This file
 ```
 
 ---
@@ -91,7 +129,6 @@ voting-agent/
 - SERPAPI key (optional, not currently used)
 
 ### Setup
-
 ```bash
 # Clone the repo
 git clone https://github.com/ngdias-sys/voting-agent.git
@@ -113,7 +150,6 @@ python3 voting_agent.py
 ```
 
 ### What Happens
-
 1. Agent prompts for your top 3 political issues
 2. For each issue, asks for your position
 3. Prompts for your location
@@ -137,9 +173,13 @@ python3 voting_agent.py
 - Input: 3 priorities (climate, healthcare, education)
 - Processing: 15 seconds (Claude API call)
 - Output: 
-  - Text report: 2-3 pages of detailed analysis
-  - HTML report: Interactive visual guide with rankings + reasoning
-  - File saved: `voting_guide_[location].txt` and `.html`
+  * Text report: 2-3 pages of detailed analysis
+  * HTML report: Interactive visual guide with rankings + reasoning
+  * Files saved: `voting_guide_[location].txt` and `.html`
+
+**See live examples:**
+- [Sample Output 1](https://github.com/ngdias-sys/voting-agent/blob/main/sample_output_1.html) - Left-leaning voter (polarized priorities)
+- [Sample Output 2](https://github.com/ngdias-sys/voting-agent/blob/main/sample_output_2.html) - Moderate voter (mixed priorities)
 
 ---
 
@@ -169,16 +209,16 @@ python3 voting_agent.py
 
 ## What I Learned Building This
 
-**Data Quality is Critical**
+**Data Quality is Critical**  
 The hardest part wasn't the reasoning engine—it was finding accurate, consistent candidate position data. In production, you need a single source of truth. This taught me that sometimes the constraint isn't the AI; it's the data.
 
-**Formatting Consistency Matters**
+**Formatting Consistency Matters**  
 Claude generates fresh analysis each run, which means formatting varies slightly. For v1, that's acceptable. For production, you'd template the output (JSON structure) to guarantee consistency.
 
-**Adoption Beats Features**
+**Adoption Beats Features**  
 The real value isn't "automation" alone. It's removing friction (fast) + building confidence (reasoning) + making it accessible (non-experts can use it). That's change management, not just tech.
 
-**The Pattern is Universal**
+**The Pattern is Universal**  
 This voting problem has the exact same structure as a hiring decision, a purchasing decision, or a strategic choice: Unclear priorities → Too much information → Uncertain outcome. Once you solve it once, the pattern applies everywhere.
 
 ---
@@ -198,7 +238,7 @@ If this were production, here's what's next:
 - PDF generation: In addition to HTML and text
 
 **User Experience**
-- Priority discovery: Help users articulate what they care about (PortPro's role)
+- Priority discovery: Help users articulate what they care about
 - User profiles: Save preferences, compare to previous elections
 - Interactive dashboard: Visual comparison tools, candidate match charts
 
@@ -240,11 +280,9 @@ This project is a proof-of-concept for that pattern.
 ```
 ANTHROPIC_API_KEY=your_key_here
 ```
-
 No other keys required (SERPAPI not currently used).
 
-**Dependencies:**
-See `requirements.txt`. Main packages:
+**Dependencies:** See `requirements.txt`. Main packages:
 - anthropic (Claude API client)
 - python-dotenv (environment variable management)
 - re (markdown parsing)
@@ -258,14 +296,11 @@ See `requirements.txt`. Main packages:
 
 ## Contact & Next Steps
 
-**Questions?**
-Feel free to open an issue or reach out.
+**Questions?** Feel free to open an issue or reach out.
 
-**Interested in this pattern?**
-This project demonstrates how AI can help humans make better decisions through structured reasoning and transparency. If you're working on similar problems, the framework is here.
+**Interested in this pattern?** This project demonstrates how AI can help humans make better decisions through structured reasoning and transparency. If you're working on similar problems, the framework is here.
 
-**Want to contribute?**
-Pull requests welcome. Focus areas: better candidate data, improved HTML styling, feedback mechanisms for learning.
+**Want to contribute?** Pull requests welcome. Focus areas: better candidate data, improved HTML styling, feedback mechanisms for learning.
 
 ---
 
