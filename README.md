@@ -75,7 +75,7 @@ Captures your top 3 political issues and your positions on each one.
 Uses Claude API to score candidate alignment 0-100 on each of your priorities. Reasoning is explicit, not hidden.
 
 ✅ **Multi-Format Output**  
-Generates both text reports (detailed, exportable) and beautiful HTML voting guides (visual, shareable).
+Generates both text reports (detailed, exportable) and polished HTML voting guides (visual, shareable).
 
 ✅ **Transparent Reasoning**  
 Explains *why* each candidate aligns with you, not just *what* the score is.
