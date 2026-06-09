@@ -52,15 +52,15 @@ The agent doesn't replace human judgment. It removes friction and builds confide
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    VOTING AGENT WORKFLOW                     │
+│                    VOTING AGENT WORKFLOW                    │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  LEARN                ANALYZE              EXPLAIN           │
-│  ──────               ───────              ───────           │
+│                                                             │
+│  LEARN                ANALYZE              EXPLAIN          │
+│  ──────               ───────              ───────          │
 │  • 3 issues    →      • Claude scores   →  • Text report    │
 │  • Positions         • 0-100 per issue     • HTML guide     │
-│  • Location          • Reasons             • Visual ranking  │
-│                                                              │
+│  • Location          • Reasons             • Visual ranking │
+│                                                             │ 
 └─────────────────────────────────────────────────────────────┘
 ```
 
